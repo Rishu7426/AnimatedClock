@@ -153,7 +153,7 @@
         /* Name Styles */
         #name-display {
             position: absolute;
-            top: 10px; /* Positioned at the top */
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 16px;
@@ -269,7 +269,9 @@
         canvasSnow1.height = window.innerHeight;
 
         const snowflakes1 = [];
-        const numSnowflakes1 = 200;
+        const numSnowflakes1 = 300; // Increased snow density
+        let mouseX = 0;
+        let mouseY = 0;
 
         for (let i = 0; i < numSnowflakes1; i++) {
             snowflakes1.push({
@@ -277,18 +279,36 @@
                 y: Math.random() * canvasSnow1.height,
                 radius: Math.random() * 2 + 1,
                 color: 'rgba(255, 255, 255, 0.6)',
-                speedY: (Math.random() * 0.8 + 0.5) * 0.2,
-                speedX: (Math.random() - 0.5) * 0.3 * 0.2,
+                speedY: (Math.random() * 0.8 + 0.5) * 0.1, // Slower speed
+                speedX: (Math.random() - 0.5) * 0.3 * 0.1, // Slower speed
                 opacity: Math.random() * 0.3 + 0.7,
+                windFactor: Math.random() * 0.5 - 0.25,
             });
         }
 
         function drawSnowflakes1() {
             ctxSnow1.clearRect(0, 0, canvasSnow1.width, canvasSnow1.height);
             snowflakes1.forEach(flake => {
+                // Wind effect
+                let windSpeed = 0.05;
+                flake.x += windSpeed + flake.windFactor;
+
+                //repulsion
+                const dx = mouseX - flake.x;
+                const dy = mouseY - flake.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 100) {
+                    const force = 100 / distance;
+                    flake.x -= dx * force * 0.05;
+                    flake.y -= dy * force * 0.05;
+                }
+
+
                 ctxSnow1.beginPath();
                 ctxSnow1.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
                 ctxSnow1.fillStyle = flake.color;
+                ctxSnow1.globalAlpha = flake.opacity;
                 ctxSnow1.fill();
                 ctxSnow1.closePath();
 
@@ -322,26 +342,40 @@
         canvasSnow2.height = window.innerHeight;
 
         const snowflakes2 = [];
-        const numSnowflakes2 = 200;
-
+        const numSnowflakes2 = 400; // Increased snow density
         for (let i = 0; i < numSnowflakes2; i++) {
             snowflakes2.push({
                 x: Math.random() * canvasSnow2.width,
                 y: Math.random() * canvasSnow2.height,
                 radius: Math.random() * 3 + 2,
                 color: 'rgba(200, 200, 200, 0.4)',
-                speedY: (Math.random() * 0.6 + 0.3) * 0.2,
-                speedX: (Math.random() - 0.5) * 0.2 * 0.2,
+                speedY: (Math.random() * 0.6 + 0.3) * 0.1, // Slower speed
+                speedX: (Math.random() - 0.5) * 0.2 * 0.1, // Slower speed
                 opacity: Math.random() * 0.2 + 0.2,
+                windFactor: Math.random() * 0.5 - 0.25,
             });
         }
 
         function drawSnowflakes2() {
             ctxSnow2.clearRect(0, 0, canvasSnow2.width, canvasSnow2.height);
             snowflakes2.forEach(flake => {
+                let windSpeed = 0.05;
+                flake.x += windSpeed + flake.windFactor;
+
+                const dx = mouseX - flake.x;
+                const dy = mouseY - flake.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 100) {
+                    const force = 100 / distance;
+                    flake.x -= dx * force * 0.05;
+                    flake.y -= dy * force * 0.05;
+                }
+
                 ctxSnow2.beginPath();
                 ctxSnow2.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
                 ctxSnow2.fillStyle = flake.color;
+                ctxSnow2.globalAlpha = flake.opacity;
                 ctxSnow2.fill();
                 ctxSnow2.closePath();
 
@@ -377,6 +411,10 @@
             canvas.height = window.innerHeight;
         });
 
+        document.addEventListener('mousemove', (event) => {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        });
 
 
         // Snowfall animation for clock dial
@@ -387,26 +425,40 @@
         canvasClockSnow.height = clockContainer.clientHeight;
 
         const snowflakesClock = [];
-        const numSnowflakesClock = 100;
-
+        const numSnowflakesClock = 150; // Increased density for clock
         for (let i = 0; i < numSnowflakesClock; i++) {
             snowflakesClock.push({
                 x: Math.random() * canvasClockSnow.width,
                 y: Math.random() * canvasClockSnow.height,
                 radius: Math.random() * 1.5 + 0.5,
                 color: 'rgba(0, 0, 255, 0.7)',
-                speedY: (Math.random() * 0.3 + 0.1) * 0.2,
-                speedX: (Math.random() - 0.5) * 0.1 * 0.2,
+                speedY: (Math.random() * 0.3 + 0.1) * 0.1, // Slower speed
+                speedX: (Math.random() - 0.5) * 0.1 * 0.1, // Slower speed
                 opacity: Math.random() * 0.2 + 0.5,
+                windFactor: Math.random() * 0.5 - 0.25,
             });
         }
 
         function drawSnowflakesClock() {
             ctxClockSnow.clearRect(0, 0, canvasClockSnow.width, canvasClockSnow.height);
             snowflakesClock.forEach(flake => {
+                 let windSpeed = 0.05;
+                flake.x += windSpeed + flake.windFactor;
+
+                const dx = mouseX - flake.x;
+                const dy = mouseY - flake.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 50) {
+                    const force = 50 / distance;
+                    flake.x -= dx * force * 0.1;
+                    flake.y -= dy * force * 0.1;
+                }
+
                 ctxClockSnow.beginPath();
                 ctxClockSnow.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
                 ctxClockSnow.fillStyle = flake.color;
+                ctxClockSnow.globalAlpha = flake.opacity;
                 ctxClockSnow.fill();
                 ctxClockSnow.closePath();
 
