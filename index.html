@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Clock with Starfield and Snow</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            z-index: 3;
+        }
+
+        .hand {
+            position: absolute;
+            left: 50%;
+            bottom: 50%;
+            transform-origin: bottom;
+            background-color: #eee;
+            z-index: 2;
+        }
+
+        #hour-hand {
+            width: 6px;
+            height: 30%;
+            transform: translateX(-3px) rotate(0deg);
+        }
+
+        #minute-hand {
+            width: 4px;
+            height: 40%;
+            transform: translateX(-2px) rotate(0deg);
+        }
+
+        #second-hand {
+            width: 2px;
+            height: 45%;
+            background-color: #ff6b81;
+            transform: translateX(-1px) rotate(0deg);
+        }
+
+        #digital-time {
+            position: absolute;
+            top: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            color: #000; /* Changed to black */
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            z-index: 2;
+        }
+
+        /* Starfield Styles */
+        #starfield-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Snowfall Styles */
+        #snowfall-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #snowfall-canvas-2 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Color Blast Styles */
+        #color-blast-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Snowfall Styles for Clock Dial */
+        #clock-snowfall-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Date Styles */
+        #date-display {
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #000; /* Changed to black */
+            z-index: 3;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 5px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+
+    </style>
+</head>
+<body>
+    <canvas id="starfield-canvas"></canvas>
+    <canvas id="snowfall-canvas"></canvas>
+    <canvas id="snowfall-canvas-2"></canvas>
+    <div class="clock-container">
+        <canvas id="clock-snowfall-canvas"></canvas>  <div class="clock-face">
+            <div class="center"></div>
+            <div id="hour-hand" class="hand"></div>
+            <div id="minute-hand" class="hand"></div>
+            <div id="second-hand" class="hand"></div>
+            <div id="date-display"></div> </div>
+        <div id="digital-time"></div>
+    </div>
+
+    <script>
+        // Get the hour, minute, and second hands
+        const hourHand = document.getElementById('hour-hand');
+        const minuteHand = document.getElementById('minute-hand');
+        const secondHand = document.getElementById('second-hand');
+        const digitalTime = document.getElementById('digital-time');
+        const dateDisplay = document.getElementById('date-display'); // Get the date display element
+
+        // Function to update the clock hands and digital time
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const day = now.getDate(); // Get the day of the month
+
+            const hourAngle = (hours % 12 + minutes / 60) * 30;
+            hourHand.style.transform = `translateX(-3px) rotate(${hourAngle}deg)`;
+            const minuteAngle = minutes * 6 + seconds / 10;
+            minuteHand.style.transform = `translateX(-2px) rotate(${minuteAngle}deg)`;
+            const secondAngle = seconds * 6;
+            secondHand.style.transform = `translateX(-1px) rotate(${secondAngle}deg)`;
+
+            digitalTime.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            dateDisplay.textContent = `${day.toString().padStart(2, '0')}`; // Display the date
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Starfield animation setup
+        const canvas = document.getElementById('starfield-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const stars = [];
+        const numStars = 200;
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2 + 1,
+                color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.5})`,
+                speed: (Math.random() * 0.5 + 0.2) * 0.2, // Made star speed 5 times slower
+            });
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = star.color;
+                ctx.fill();
+                ctx.closePath();
+
+                star.x += star.speed;
+                if (star.x > canvas.width) {
+                    star.x = 0;
+                    star.x = -star.radius;
+                }
+            });
+        }
+
+        function animateStars() {
+            drawStars();
+            requestAnimationFrame(animateStars);
+        }
+
+        animateStars();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+
+
+        // Snowfall animation setup
+        const canvasSnow1 = document.getElementById('snowfall-canvas');
+        const ctxSnow1 = canvasSnow1.getContext('2d');
+        canvasSnow1.width = window.innerWidth;
+        canvasSnow1.height = window.innerHeight;
+
+        const snowflakes1 = [];
+        const numSnowflakes1 = 200; // Increased snowfall quantity
+
+        for (let i = 0; i < numSnowflakes1; i++) {
+            snowflakes1.push({
+                x: Math.random() * canvasSnow1.width,
+                y: Math.random() * canvasSnow1.height,
+                radius: Math.random() * 2 + 1,
+                color: 'rgba(255, 255, 255, 0.6)',
+                speedY: (Math.random() * 0.8 + 0.5) * 0.2, // Made snow speed 5 times slower
+                speedX: (Math.random() - 0.5) * 0.3 * 0.2, // Made snow speed 5 times slower
+                opacity: Math.random() * 0.3 + 0.7,
+            });
+        }
+
+        function drawSnowflakes1() {
+            ctxSnow1.clearRect(0, 0, canvasSnow1.width, canvasSnow1.height);
+            snowflakes1.forEach(flake => {
+                ctxSnow1.beginPath();
+                ctxSnow1.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctxSnow1.fillStyle = flake.color;
+                ctxSnow1.fill();
+                ctxSnow1.closePath();
+
+                flake.y += flake.speedY;
+                flake.x += flake.speedX;
+
+                if (flake.y > canvasSnow1.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvasSnow1.width;
+                }
+                if (flake.x > canvasSnow1.width) {
+                    flake.x = 0;
+                }
+                if (flake.x < 0) {
+                    flake.x = canvasSnow1.width;
+                }
+            });
+        }
+
+        function animateSnowfall1() {
+            drawSnowflakes1();
+            requestAnimationFrame(animateSnowfall1);
+        }
+
+        animateSnowfall1();
+
+        // Second snowfall layer
+        const canvasSnow2 = document.getElementById('snowfall-canvas-2');
+        const ctxSnow2 = canvasSnow2.getContext('2d');
+        canvasSnow2.width = window.innerWidth;
+        canvasSnow2.height = window.innerHeight;
+
+        const snowflakes2 = [];
+        const numSnowflakes2 = 200; // Increased snowfall quantity
+
+        for (let i = 0; i < numSnowflakes2; i++) {
+            snowflakes2.push({
+                x: Math.random() * canvasSnow2.width,
+                y: Math.random() * canvasSnow2.height,
+                radius: Math.random() * 3 + 2,
+                color: 'rgba(200, 200, 200, 0.4)',
+                speedY: (Math.random() * 0.6 + 0.3) * 0.2, // Made snow speed 5 times slower
+                speedX: (Math.random() - 0.5) * 0.2 * 0.2, // Made snow speed 5 times slower
+                opacity: Math.random() * 0.2 + 0.2,
+            });
+        }
+
+        function drawSnowflakes2() {
+            ctxSnow2.clearRect(0, 0, canvasSnow2.width, canvasSnow2.height);
+            snowflakes2.forEach(flake => {
+                ctxSnow2.beginPath();
+                ctxSnow2.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctxSnow2.fillStyle = flake.color;
+                ctxSnow2.fill();
+                ctxSnow2.closePath();
+
+                flake.y += flake.speedY;
+                flake.x += flake.speedX;
+
+                if (flake.y > canvasSnow2.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvasSnow2.width;
+                }
+                if (flake.x > canvasSnow2.width) {
+                    flake.x = 0;
+                }
+                if (flake.x < 0) {
+                    flake.x = canvasSnow2.width;
+                }
+            });
+        }
+
+        function animateSnowfall2() {
+            drawSnowflakes2();
+            requestAnimationFrame(animateSnowfall2);
+        }
+
+        animateSnowfall2();
+
+        window.addEventListener('resize', () => {
+            canvasSnow1.width = window.innerWidth;
+            canvasSnow1.height = window.innerHeight;
+            canvasSnow2.width = window.innerWidth;
+            canvasSnow2.height = window.innerHeight;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+
+
+        // Snowfall animation for clock dial
+        const canvasClockSnow = document.getElementById('clock-snowfall-canvas');
+        const ctxClockSnow = canvasClockSnow.getContext('2d');
+        const clockContainer = document.querySelector('.clock-container');
+        canvasClockSnow.width = clockContainer.clientWidth;
+        canvasClockSnow.height = clockContainer.clientHeight;
+
+        const snowflakesClock = [];
+        const numSnowflakesClock = 100; // Increased snowfall quantity
+
+        for (let i = 0; i < numSnowflakesClock; i++) {
+            snowflakesClock.push({
+                x: Math.random() * canvasClockSnow.width,
+                y: Math.random() * canvasClockSnow.height,
+                radius: Math.random() * 1.5 + 0.5,
+                color: 'rgba(0, 0, 255, 0.7)',
+                speedY: (Math.random() * 0.3 + 0.1) * 0.2, // Made snow speed 5 times slower
+                speedX: (Math.random() - 0.5) * 0.1 * 0.2, // Made snow speed 5 times slower
+                opacity: Math.random() * 0.2 + 0.5,
+            });
+        }
+
+        function drawSnowflakesClock() {
+            ctxClockSnow.clearRect(0, 0, canvasClockSnow.width, canvasClockSnow.height);
+            snowflakesClock.forEach(flake => {
+                ctxClockSnow.beginPath();
+                ctxClockSnow.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctxClockSnow.fillStyle = flake.color;
+                ctxClockSnow.fill();
+                ctxClockSnow.closePath();
+
+                flake.y += flake.speedY;
+                flake.x += flake.speedX;
+
+                if (flake.y > canvasClockSnow.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvasClockSnow.width;
+                }
+                if (flake.x > canvasClockSnow.width) {
+                    flake.x = 0;
+                }
+                if (flake.x < 0) {
+                    flake.x = canvasClockSnow.width;
+                }
+            });
+        }
+
+        function animateSnowfallClock() {
+            drawSnowflakesClock();
+            requestAnimationFrame(animateSnowfallClock);
+        }
+
+        animateSnowfallClock();
+
+        const clockResizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                if (entry.target === clockContainer) {
+                    canvasClockSnow.width = entry.contentRect.width;
+                    canvasClockSnow.height = entry.contentRect.height;
+                }
+            }
+        });
+
+        clockResizeObserver.observe(clockContainer);
+
+    </script>
+</body>
+</html>
